@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Subir archivos con Firebase</title>
+</head>
+<body>
+  <input type="file" id="campoarchivo">
+  <div id="mensaje"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/live/3.0/firebase.js"></script>
+  <script>
+    // Initialize Firebase
+    var config = {
+      apiKey: "AIzaSyAKAAAPi-aPffdsliTggEtTW23s222I371Y",
+      authDomain: "tuapp.firebaseapp.com",
+      databaseURL: "https://tuapp.firebaseio.com",
+      storageBucket: "tuapp.appspot.com",
+    };
+    firebase.initializeApp(config);
+
+    // Servicios de APIs Firebase
+    var authService = firebase.auth();
+    var storageService = firebase.storage();
+
+    window.onload = function() {
+      // realizamos la autenticación anónima (debe estar activada en la consola de Firebase)
+      authService.signInAnonymously()
+        .catch(function(error) {
+          console.error('Detectado error de autenticación', error);
+        });
+
+      // asociamos el manejador de eventos sobre el INPUT FILE
+      document.getElementById('campoarchivo').addEventListener('change', function(evento){
+        evento.preventDefault();
+        var archivo  = evento.target.files[0];
+        subirArchivo(archivo);
+      });
+    }
+
+    // función que se encargará de subir el archivo
+    function subirArchivo(archivo) {
+      // creo una referencia al lugar donde guardaremos el archivo
+      var refStorage = storageService.ref('micarpeta').child(archivo.name);
+      // Comienzo la tarea de upload
+      var uploadTask = refStorage.put(archivo);
+
+      // defino un evento para saber qué pasa con ese upload iniciado
+      uploadTask.on('state_changed', null,
+        function(error){
+          console.log('Error al subir el archivo', error);
+        },
+        function(){
+          console.log('Subida completada');
+          mensajeFinalizado(uploadTask.snapshot.downloadURL, uploadTask.snapshot.totalBytes);
+        }
+      );
+    }
+
+    // a esta función la invocamos para mostrar el mensaje final después del upload
+    function mensajeFinalizado(url, bytes) {
+      var elMensaje = document.getElementById('mensaje');
+      var textoMensaje = '<p>Subido el archivo!';
+      textoMensaje += '<br>Bytes subidos: ' + bytes;
+      textoMensaje += '<br><a href="' + url + '">Ver el fichero</a></p>';
+      elMensaje.innerHTML = textoMensaje;
+    }
+  </script>
+
+<!-- onclick="eliminar('${doc.id}')" -->
+
+
+
+<td><button class="btn btn-danger" onclick="eliminar('${doc.id}')">Eliminar</button></td>
+                  <td><button class="btn btn-warning" onclick="editar('${doc.id}', '${doc.data().first}', '${doc.data().last}', '${doc.data().born}')">Editar</button></td>
+</body>
+</html>
